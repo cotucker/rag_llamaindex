@@ -1,0 +1,8 @@
+[project]
+name = "test"
+version = "0.1.0"
+description = "Intelligent question-answering systems over your documents using Retrieval-Augmented Generation (RAG), LlamaIndex. Ingest PDFs, TXT, and more—query with context-aware responses."
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+]
