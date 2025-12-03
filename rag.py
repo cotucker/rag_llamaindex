@@ -82,6 +82,6 @@ def initialize_index():
 _index_instance = initialize_index()
 
 def get_response(query_text: str):
-    query_engine = _index_instance.as_query_engine(similarity_top_k=5)
+    query_engine = _index_instance.as_query_engine(similarity_top_k=20)
     response = query_engine.query(query_text)
     return response
