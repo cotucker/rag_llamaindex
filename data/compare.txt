@@ -1,0 +1,48 @@
+TechFlow Solutions: 2025 Enterprise Laptop Catalog
+Introduction
+
+Welcome to the 2025 TechFlow lineup. This year, we are proud to introduce our two flagship models designed for the modern professional: the ultra-portable Velocity Air and the powerhouse Velocity Titan. Below you will find detailed specifications and use-case recommendations.
+Model 1: TechFlow Velocity Air (Business Edition)
+
+The Velocity Air is designed for the traveling executive who values portability above all else. Crafted from aerospace-grade magnesium alloy, it creates a balance between lightness and durability.
+
+Key Features & Performance:
+At the heart of the Velocity Air is the Silicon-M5 Hexa-Core processor, optimized for high efficiency. It comes standard with 16GB of LPDDR5 RAM (non-upgradable) to handle multitasking with ease. The visual experience is delivered through a stunning 13.4-inch OLED display with a resolution of 1920 x 1200.
+
+Battery & Connectivity:
+Despite its small chassis, we managed to fit a 55Wh battery, which provides approximately 12 hours of continuous web browsing. Connectivity includes 2x Thunderbolt 4 ports and 1x USB-A 3.2. Note that this model does not include an HDMI port or an SD card slot, requiring a dongle for presentation setups.
+
+Pricing & Warranty:
+
+    MSRP: $1,299
+
+    Weight: 0.98 kg (2.16 lbs)
+
+    Warranty: 3-Year On-site Support
+
+Model 2: TechFlow Velocity Titan (Workstation Edition)
+
+The Velocity Titan is built for engineers, data scientists, and video editors who need desktop-class performance in a mobile form factor. It features a robust aluminum chassis with an advanced vapor chamber cooling system.
+
+Key Features & Performance:
+The Titan is powered by the Silicon-M5 Max Dodeca-Core (12-core) processor, capable of heavy compiling and rendering tasks. It is equipped with 32GB of DDR5 RAM, which is user-upgradable up to 64GB. The display is a massive 16-inch Mini-LED panel with a resolution of 3456 x 2234 and a 120Hz refresh rate.
+
+Battery & Connectivity:
+To support high-performance workloads, the Titan houses a massive 99Wh battery. However, due to the power-hungry components, the estimated battery life is 7 hours of mixed usage. Connectivity is extensive: 3x Thunderbolt 4 ports, 1x HDMI 2.1, 1x SD Card Reader, and an Ethernet port.
+
+Pricing & Warranty:
+
+    MSRP: $2,499
+
+    Weight: 2.1 kg (4.6 lbs)
+
+    Warranty: 1-Year Standard Depot Warranty (upgradable)
+
+Comparison Summary Table
+Feature	Velocity Air	Velocity Titan
+Processor	Silicon-M5 (6-Core)	Silicon-M5 Max (12-Core)
+RAM	16GB (Soldered)	32GB (Upgradable)
+Screen Size	13.4" OLED	16" Mini-LED
+Battery Life	~12 Hours	~7 Hours
+Weight	0.98 kg	2.1 kg
+Price	$1,299	$2,499
