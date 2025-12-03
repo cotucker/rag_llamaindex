@@ -1,6 +1,6 @@
 from llama_index.core import VectorStoreIndex, SimpleDirectoryReader, Settings
 from llama_index.vector_stores.chroma import ChromaVectorStore
-from llama_index.core import StorageContext
+from llama_index.core import StorageContext, Document
 from llama_index.embeddings.huggingface import HuggingFaceEmbedding
 from llama_index.llms.cerebras import Cerebras
 import chromadb
@@ -8,6 +8,11 @@ import os
 from dotenv import load_dotenv
 
 load_dotenv()
+def get_document_from_pdf(path_to_pdf: str) -> Document:
+    import pymupdf
+    doc = pymupdf.open(path_to_pdf)
+    text = '\n'.join([page.get_text() for page in doc])
+    return Document(text=text, metadata={"file_path": path_to_pdf})
 
 CEREBRAS_API_KEY = os.getenv("CEREBRAS_API_KEY")
 if not CEREBRAS_API_KEY:
@@ -20,7 +25,8 @@ chroma_collection = chroma_client.create_collection("quickstart")
 
 embed_model = HuggingFaceEmbedding(model_name="all-MiniLM-L12-v2")
 
-documents = SimpleDirectoryReader("data/").load_data()
+# documents = SimpleDirectoryReader("data/").load_data()
+documents = [get_document_from_pdf("data/Климович Илья 5ПИ Лабораторная 2.pdf")]
 
 vector_store = ChromaVectorStore(chroma_collection=chroma_collection)
 storage_context = StorageContext.from_defaults(vector_store=vector_store)
@@ -28,7 +34,6 @@ index = VectorStoreIndex.from_documents(
     documents, storage_context=storage_context, embed_model=embed_model
 )
 
-# Query Data
 query_engine = index.as_query_engine(similarity_top_k=5)
 response = query_engine.query("Какая цель лабораторной работы ?")
 
