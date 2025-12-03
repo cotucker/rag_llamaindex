@@ -52,29 +52,27 @@ def print_response_sources(response):
         print(f"Content snippet:\n{text_content}\n")
         print("-" * 30)
 
+def get_response(query_text: str) -> str:
+    documents = get_domuments("data")
+    vector_store = ChromaVectorStore(chroma_collection=chroma_collection)
+    storage_context = StorageContext.from_defaults(vector_store=vector_store)
+    index = VectorStoreIndex.from_documents(
+        documents, storage_context=storage_context, embed_model=embed_model
+    )
+    query_engine = index.as_query_engine(similarity_top_k=5)
+    response = query_engine.query(query_text)
+    return response
+    # print(f"Response 💬: {response}\n")
+    # print_response_sources(response)
+
 CEREBRAS_API_KEY = os.getenv("CEREBRAS_API_KEY")
+
 if not CEREBRAS_API_KEY:
     raise ValueError("CEREBRAS_API_KEY environment variable is not set.")
 
 Settings.llm = Cerebras(model="gpt-oss-120b", api_key=CEREBRAS_API_KEY)
-
 chroma_client = chromadb.EphemeralClient()
 chroma_collection = chroma_client.create_collection("quickstart")
-
 embed_model = HuggingFaceEmbedding(model_name="all-MiniLM-L12-v2")
 
 # documents = SimpleDirectoryReader("data/").load_data()
-documents = get_domuments("data/")
-
-vector_store = ChromaVectorStore(chroma_collection=chroma_collection)
-storage_context = StorageContext.from_defaults(vector_store=vector_store)
-index = VectorStoreIndex.from_documents(
-    documents, storage_context=storage_context, embed_model=embed_model
-)
-
-query_engine = index.as_query_engine(similarity_top_k=5)
-response = query_engine.query("What is ownership and borrowing in Rust?")
-
-print(f"Response: {response}\n")
-
-# print_response_sources(response)

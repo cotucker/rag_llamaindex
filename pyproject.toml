@@ -14,5 +14,6 @@ dependencies = [
     "llama-index-vector-stores-chroma>=0.5.3",
     "pydantic>=2.12.5",
     "pymupdf>=1.26.6",
+    "rich>=14.2.0",
     "sentence-transformers>=5.1.2",
 ]
