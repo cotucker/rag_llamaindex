@@ -29,8 +29,8 @@ index = VectorStoreIndex.from_documents(
 )
 
 # Query Data
-query_engine = index.as_query_engine()
-response = query_engine.query("TriviaQA of Joshi")
+query_engine = index.as_query_engine(similarity_top_k=5)
+response = query_engine.query("Какая цель лабораторной работы ?")
 
 print(f"Response: {response}\n")
 
