@@ -1,0 +1,16 @@
+[llm]
+provider = "cerebras"
+model_name = "gpt-oss-120b"
+temperature = 0.1
+api_key_env_var = "CEREBRAS_API_KEY"
+
+[vector_store]
+collection_name = "quickstart"
+path = "./chroma_db"
+top_k = 5
+
+[embedding]
+model_name = "all-MiniLM-L12-v2"
+
+[domain]
+domain_path = "./data"

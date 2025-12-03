@@ -1,3 +1,4 @@
+from rich.tree import Tree
 from rich.console import Console
 from rich.panel import Panel
 from rich.prompt import Prompt
@@ -43,6 +44,26 @@ def main():
             console.print("[bold purple]🤖 AI Answer:[/bold purple]")
             console.print(Panel(Markdown(response_text), border_style="purple", title="Result", title_align="left"))
 
+            if hasattr(response, 'source_nodes') and response.source_nodes:
+                tree = Tree("📚 [dim]Knowledge sources:[/dim]")
+                found_sources = False
+
+                for node_score in response.source_nodes:
+                    score = node_score.score or 0.0
+                    meta = node_score.node.metadata
+                    file_name = meta.get('file_name') or meta.get('file_path') or "Unknown"
+                    source_branch = tree.add(f"[cyan]{file_name}[/cyan] [dim](Score: {score:.2f})[/dim]")
+                    text_preview = node_score.node.get_text().replace('\n', ' ').strip()[:80] + "..."
+                    source_branch.add(f"[italic grey50]\"{text_preview}\"[/italic grey50]")
+                    found_sources = True
+
+                if found_sources:
+                    console.print(tree)
+                else:
+                    console.print("[dim italic]No sources found (LLM answered from its memory or hallucinated)[/dim]")
+                console.print("")
+            else:
+                 console.print("[dim italic]RAG did not return source nodes.[/dim]\n")
         except KeyboardInterrupt:
             console.print("\n[bold red]⛔ User interruption.[/bold red]")
             break
