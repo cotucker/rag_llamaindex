@@ -15,17 +15,13 @@ if not CEREBRAS_API_KEY:
 
 Settings.llm = Cerebras(model="gpt-oss-120b", api_key=CEREBRAS_API_KEY)
 
-# create client and a new collection
 chroma_client = chromadb.EphemeralClient()
 chroma_collection = chroma_client.create_collection("quickstart")
 
-# define embedding function
-embed_model = HuggingFaceEmbedding(model_name="all-MiniLM-L6-v2")
+embed_model = HuggingFaceEmbedding(model_name="all-MiniLM-L12-v2")
 
-# load documents
 documents = SimpleDirectoryReader("data/").load_data()
 
-# set up ChromaVectorStore and load in data
 vector_store = ChromaVectorStore(chroma_collection=chroma_collection)
 storage_context = StorageContext.from_defaults(vector_store=vector_store)
 index = VectorStoreIndex.from_documents(
@@ -34,6 +30,28 @@ index = VectorStoreIndex.from_documents(
 
 # Query Data
 query_engine = index.as_query_engine()
-response = query_engine.query("What is closed-domain datasets")
+response = query_engine.query("TriviaQA of Joshi")
 
-print(response)
+print(f"Response: {response}\n")
+
+print("--- Source Documents ---")
+for node_with_score in response.source_nodes:
+    node = node_with_score.node
+    text_content = node.get_text()
+    file_path = node.metadata.get("file_path")
+
+    start_line = "Unknown"
+    if file_path and os.path.exists(file_path):
+        try:
+            with open(file_path, "r", encoding="utf-8") as f:
+                full_text = f.read()
+                start_index = full_text.find(text_content)
+                if start_index != -1:
+                    start_line = full_text.count('\n', 0, start_index) + 1
+        except Exception:
+            pass
+
+    print(f"File: {file_path}")
+    print(f"Line: {start_line}")
+    print(f"Content snippet:\n{text_content}\n")
+    print("-" * 30)
