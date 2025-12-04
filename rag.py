@@ -51,7 +51,7 @@ def get_documents(path: str):
 
     splitter = SemanticSplitterNodeParser(
         buffer_size=1,
-        breakpoint_percentile_threshold=95,
+        breakpoint_percentile_threshold=70,
         embed_model=embed_model
     )
     nodes = splitter.get_nodes_from_documents(documents)

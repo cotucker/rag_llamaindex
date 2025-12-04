@@ -17,5 +17,6 @@ dependencies = [
     "rich>=14.2.0",
     "scikit-learn>=1.7.2",
     "sentence-transformers>=5.1.2",
+    "spacy>=3.8.11",
     "xformers>=0.0.33.post1",
 ]
