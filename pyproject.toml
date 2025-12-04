@@ -16,4 +16,5 @@ dependencies = [
     "pymupdf>=1.26.6",
     "rich>=14.2.0",
     "sentence-transformers>=5.1.2",
+    "xformers>=0.0.33.post1",
 ]
