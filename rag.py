@@ -2,6 +2,7 @@ import os
 import shutil
 import chromadb
 from llama_index.core import VectorStoreIndex, SimpleDirectoryReader, Settings, Document, StorageContext
+from llama_index.core.node_parser import SemanticSplitterNodeParser
 from llama_index.vector_stores.chroma import ChromaVectorStore
 from llama_index.embeddings.huggingface import HuggingFaceEmbedding
 from llama_index.llms.cerebras import Cerebras
@@ -28,13 +29,14 @@ def get_document_from_txt(path_to_txt: str) -> Document:
         text = f.read()
     return Document(text=text, metadata={"file_path": path_to_txt, "file_name": os.path.basename(path_to_txt)})
 
-def get_documents(path: str) -> list[Document]:
+def get_documents(path: str):
     documents = []
     if not os.path.exists(path):
         os.makedirs(path)
         return []
 
     print(f"📂 Scanning folder: {path}")
+
     for filename in os.listdir(path):
         full_path = os.path.join(path, filename)
         try:
@@ -46,7 +48,14 @@ def get_documents(path: str) -> list[Document]:
                 print(f"   - Added TXT: {filename}")
         except Exception as e:
             print(f"   ❌ Error reading file {filename}: {e}")
-    return documents
+
+    splitter = SemanticSplitterNodeParser(
+        buffer_size=1,
+        breakpoint_percentile_threshold=95,
+        embed_model=embed_model
+    )
+    nodes = splitter.get_nodes_from_documents(documents)
+    return nodes
 
 def initialize_index():
     db_path = settings.vector_store.path

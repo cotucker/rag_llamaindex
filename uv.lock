@@ -3569,6 +3569,7 @@ dependencies = [
     { name = "pydantic" },
     { name = "pymupdf" },
     { name = "rich" },
+    { name = "scikit-learn" },
     { name = "sentence-transformers" },
     { name = "xformers" },
 ]
@@ -3585,6 +3586,7 @@ requires-dist = [
     { name = "pydantic", specifier = ">=2.12.5" },
     { name = "pymupdf", specifier = ">=1.26.6" },
     { name = "rich", specifier = ">=14.2.0" },
+    { name = "scikit-learn", specifier = ">=1.7.2" },
     { name = "sentence-transformers", specifier = ">=5.1.2" },
     { name = "xformers", specifier = ">=0.0.33.post1" },
 ]
