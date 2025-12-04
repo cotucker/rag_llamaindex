@@ -26,7 +26,7 @@ def main():
     while True:
         try:
             console.print("\n[bold green]👤 Your question:[/bold green]")
-            user_input = Prompt.ask(">>>")
+            user_input = Prompt.ask("💬")
 
             if user_input.lower() in ["exit", "quit", "q", "выход"]:
                 console.print("\n[bold yellow]👋 Goodbye! Session terminated.[/bold yellow]")

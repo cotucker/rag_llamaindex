@@ -15,7 +15,7 @@ if not CEREBRAS_API_KEY:
     raise ValueError("CEREBRAS_API_KEY environment variable is not set.")
 
 Settings.llm = Cerebras(model=settings.llm.model_name, api_key=CEREBRAS_API_KEY)
-embed_model = HuggingFaceEmbedding(model_name="all-MiniLM-L12-v2")
+embed_model = HuggingFaceEmbedding(model_name="MongoDB/mdbr-leaf-ir")
 
 def get_document_from_pdf(path_to_pdf: str) -> Document:
     import pymupdf
@@ -82,6 +82,6 @@ def initialize_index():
 _index_instance = initialize_index()
 
 def get_response(query_text: str):
-    query_engine = _index_instance.as_query_engine(similarity_top_k=20)
+    query_engine = _index_instance.as_query_engine(similarity_top_k=5)
     response = query_engine.query(query_text)
     return response
