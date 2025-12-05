@@ -27,10 +27,9 @@ def get_images_description(page) -> str:
         image_bytes = base_image["image"]
         caption = caption_image(image_bytes)
         desc_str = (
-            f"[Image Info: file='image{page.number+1}_{image_index}.{base_image['ext']}' | "
-            f"Title: {caption.image_name} | "
-            f"Type: {caption.image_type} | "
-            f"Description: {caption.image_description}]"
+            f"Image: {caption.image_name} "
+            f"Type: {caption.image_type} "
+            f"Description: {caption.image_description}"
         )
         descriptions.append(desc_str)
 

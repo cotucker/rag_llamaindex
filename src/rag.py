@@ -23,6 +23,8 @@ embed_model = HuggingFaceEmbedding(model_name=settings.embedding.model_name, tru
 def get_document_from_pdf(path_to_pdf: str) -> Document:
     doc = pymupdf.open(path_to_pdf)
     text = '\n'.join([page.get_text() + '\n' +  get_images_description(page) for page in doc])
+    with open("data/text.txt", "w", encoding="utf-8") as f:
+        f.write(text)
     return Document(text=text, metadata={"file_path": path_to_pdf, "file_name": os.path.basename(path_to_pdf)})
 
 def get_document_from_txt(path_to_txt: str) -> Document:
@@ -95,3 +97,6 @@ def get_response(query_text: str):
     query_engine = _index_instance.as_query_engine(similarity_top_k=settings.vector_store.top_k)
     response = query_engine.query(query_text)
     return response
+
+if __name__ == "__main__":
+    get_document_from_pdf("data/test.pdf")
