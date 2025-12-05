@@ -12,10 +12,6 @@ class Image(BaseModel):
 
 load_dotenv()
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
-
-if not GEMINI_API_KEY:
-    raise ValueError("GEMINI_API_KEY environment variable is not set.")
-
 client = genai.Client(api_key=GEMINI_API_KEY)
 
 def caption_image(image_data: bytes):

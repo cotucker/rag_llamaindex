@@ -1,50 +1,27 @@
 from rich.tree import Tree
 from rich.console import Console
 from rich.panel import Panel
-from rich.prompt import Prompt, Confirm
+from rich.prompt import Prompt
 from rich.markdown import Markdown
+from rich.layout import Layout
+from rich.live import Live
 import sys
-from src.rag import get_response, check_for_updates, apply_updates, initialize_index
+
+from src.rag import get_response
 
 console = Console()
 
 def print_banner():
+    """Display a nice header"""
     banner_text = """
     [bold cyan]🔮 RAG AI Chat Terminal[/bold cyan]
     [dim]Ask questions about your documents. Type 'exit' to quit.[/dim]
     """
     console.print(Panel(banner_text, border_style="blue", expand=False))
 
-def process_db_updates():
-    with console.status("[bold blue]🔍 Checking for document updates...[/bold blue]"):
-        updates = check_for_updates()
-
-    total_changes = len(updates['new']) + len(updates['modified']) + len(updates['deleted'])
-
-    if total_changes > 0:
-        console.print(f"\n[bold yellow]⚠️  Updates detected:[/bold yellow]")
-        if updates['new']: console.print(f"   [green]+ New:[/green] {', '.join(updates['new'])}")
-        if updates['modified']: console.print(f"   [blue]~ Modified:[/blue] {', '.join(updates['modified'])}")
-        if updates['deleted']: console.print(f"   [red]- Deleted:[/red] {', '.join(updates['deleted'])}")
-
-        if Confirm.ask("\n[bold]Do you want to update the database now?[/bold]"):
-            with console.status("[bold green]🔄 Updating knowledge base...[/bold green]"):
-                apply_updates(updates)
-            console.print("[bold green]✅ Database updated successfully![/bold green]")
-            initialize_index()
-        else:
-            console.print("[dim]Skipping update. Searching in old data.[/dim]")
-    else:
-        console.print("[dim green]✅ Database is up to date.[/dim green]")
-
 def main():
     console.clear()
     print_banner()
-
-    try:
-        process_db_updates()
-    except Exception as e:
-        console.print(f"[bold red]❌ Error checking updates:[/bold red] {e}")
 
     while True:
         try:
