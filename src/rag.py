@@ -1,6 +1,7 @@
 import os
 import shutil
 import chromadb
+import pymupdf
 from llama_index.core import VectorStoreIndex, SimpleDirectoryReader, Settings, Document, StorageContext
 from llama_index.core.node_parser import SemanticSplitterNodeParser
 from llama_index.vector_stores.chroma import ChromaVectorStore
@@ -8,6 +9,7 @@ from llama_index.embeddings.huggingface import HuggingFaceEmbedding
 from llama_index.llms.cerebras import Cerebras
 from dotenv import load_dotenv
 from src.config import settings
+from src.doc_parser import get_images_description
 
 load_dotenv()
 
@@ -19,9 +21,8 @@ Settings.llm = Cerebras(model=settings.llm.model_name, api_key=CEREBRAS_API_KEY)
 embed_model = HuggingFaceEmbedding(model_name=settings.embedding.model_name, trust_remote_code=True)
 
 def get_document_from_pdf(path_to_pdf: str) -> Document:
-    import pymupdf
     doc = pymupdf.open(path_to_pdf)
-    text = '\n'.join([page.get_text() for page in doc])
+    text = '\n'.join([page.get_text() + '\n' +  get_images_description(page) for page in doc])
     return Document(text=text, metadata={"file_path": path_to_pdf, "file_name": os.path.basename(path_to_pdf)})
 
 def get_document_from_txt(path_to_txt: str) -> Document:
