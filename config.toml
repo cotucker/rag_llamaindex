@@ -10,7 +10,7 @@ path = "./chroma_db"
 top_k = 5
 
 [embedding]
-model_name = "all-MiniLM-L12-v2"
+model_name = "Snowflake/snowflake-arctic-embed-m-v2.0"
 
 [domain]
 domain_path = "./data"

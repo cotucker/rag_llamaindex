@@ -7,7 +7,7 @@ from rich.layout import Layout
 from rich.live import Live
 import sys
 
-from rag import get_response
+from src.rag import get_response
 
 console = Console()
 
