@@ -26,12 +26,16 @@ def get_images_description(page) -> str:
         base_image = page.parent.extract_image(xref)
         image_bytes = base_image["image"]
         caption = caption_image(image_bytes)
-        descriptions.append({
-            "image_index": image_index,
-            "image_name": f"image{page.number+1}_{image_index}.{base_image['ext']}",
-            "image_title": caption.image_name,
-            "image_type": caption.image_type,
-            "image_description": caption.image_description
-        })
+        desc_str = (
+            f"[Image Info: file='image{page.number+1}_{image_index}.{base_image['ext']}' | "
+            f"Title: {caption.image_name} | "
+            f"Type: {caption.image_type} | "
+            f"Description: {caption.image_description}]"
+        )
+        descriptions.append(desc_str)
 
-    return str(descriptions)
+    if not descriptions:
+        return ""
+
+    result = '\n'.join(descriptions)
+    return result
