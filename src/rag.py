@@ -1,5 +1,6 @@
 import os
 import shutil
+import re
 import chromadb
 import pymupdf
 from llama_index.core import VectorStoreIndex, SimpleDirectoryReader, Settings, Document, StorageContext
@@ -20,9 +21,16 @@ if not CEREBRAS_API_KEY:
 Settings.llm = Cerebras(model=settings.llm.model_name, api_key=CEREBRAS_API_KEY)
 embed_model = HuggingFaceEmbedding(model_name=settings.embedding.model_name, trust_remote_code=True)
 
+def clean_text(text: str) -> str:
+    text = re.sub(r'[^\w\s\.]', '', text)
+    text = text.replace('\n', ' ')
+    text = re.sub(r'\s+', ' ', text)
+    return text.strip()
+
 def get_document_from_pdf(path_to_pdf: str) -> Document:
     doc = pymupdf.open(path_to_pdf)
-    text = '\n'.join([page.get_text() + '\n' +  get_images_description(page) for page in doc])
+    text = ' '.join([page.get_text() + ' ' +  get_images_description(page) for page in doc])
+    text = clean_text(text)
     with open("data/text.txt", "w", encoding="utf-8") as f:
         f.write(text)
     return Document(text=text, metadata={"file_path": path_to_pdf, "file_name": os.path.basename(path_to_pdf)})
@@ -30,6 +38,7 @@ def get_document_from_pdf(path_to_pdf: str) -> Document:
 def get_document_from_txt(path_to_txt: str) -> Document:
     with open(path_to_txt, "r", encoding="utf-8") as f:
         text = f.read()
+    text = clean_text(text)
     return Document(text=text, metadata={"file_path": path_to_txt, "file_name": os.path.basename(path_to_txt)})
 
 def get_documents(path: str):
