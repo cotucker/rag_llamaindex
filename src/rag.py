@@ -31,8 +31,6 @@ def get_document_from_pdf(path_to_pdf: str) -> Document:
     doc = pymupdf.open(path_to_pdf)
     text = ' '.join([page.get_text() + ' ' +  get_images_description(page) for page in doc])
     text = clean_text(text)
-    with open("data/text.txt", "w", encoding="utf-8") as f:
-        f.write(text)
     return Document(text=text, metadata={"file_path": path_to_pdf, "file_name": os.path.basename(path_to_pdf)})
 
 def get_document_from_txt(path_to_txt: str) -> Document:
