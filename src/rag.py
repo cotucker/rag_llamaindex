@@ -8,6 +8,7 @@ import pymupdf
 from llama_index.core import VectorStoreIndex, SimpleDirectoryReader, Settings, Document, StorageContext
 from llama_index.core.node_parser import SemanticSplitterNodeParser
 from llama_index.core.postprocessor import SimilarityPostprocessor
+from llama_index.core.vector_stores import MetadataFilters, MetadataFilter, FilterCondition
 from llama_index.vector_stores.chroma import ChromaVectorStore
 from llama_index.embeddings.huggingface import HuggingFaceEmbedding
 from llama_index.llms.cerebras import Cerebras
@@ -206,10 +207,22 @@ def initialize_index():
 
 _index_instance = initialize_index()
 
-def get_response(query_text: str):
+def get_response(query_text: str, file_filters: list[str] = None):
     # processor = SimilarityPostprocessor(similarity_cutoff=0.15)
+
+    filters = None
+    if file_filters:
+        print(f"🔍 Filtering search by documents: {file_filters}")
+        filters = MetadataFilters(
+            filters=[
+                MetadataFilter(key="file_name", value=f) for f in file_filters
+            ],
+            condition=FilterCondition.OR
+        )
+
     query_engine = _index_instance.as_query_engine(
         similarity_top_k=settings.vector_store.top_k,
+        filters=filters
         # node_postprocessors=[processor]
     )
     response = query_engine.query(query_text)

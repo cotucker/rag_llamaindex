@@ -6,6 +6,7 @@ from rich.markdown import Markdown
 from rich.layout import Layout
 from rich.live import Live
 import sys
+import re
 
 from src.rag import get_response, check_for_updates, update_knowledge_base
 
@@ -51,10 +52,20 @@ def main():
             if not user_input.strip():
                 continue
 
+            # Extract @filename patterns
+            file_filters = re.findall(r'@([\w\.\-_]+)', user_input)
+            clean_input = re.sub(r'@[\w\.\-_]+', '', user_input).strip()
+            
+            if not clean_input and not file_filters:
+                continue
+
             console.print("")
+            
+            if file_filters:
+                console.print(f"[dim]🎯 Targeted documents: {', '.join(file_filters)}[/dim]")
 
             with console.status("[bold magenta]🤖 Reading documents and generating answer...[/bold magenta]", spinner="dots"):
-                response = get_response(user_input)
+                response = get_response(clean_input, file_filters=file_filters)
 
             response_text = str(response)
             console.print("[bold purple]🤖 AI Answer:[/bold purple]")
