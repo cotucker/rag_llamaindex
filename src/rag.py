@@ -5,6 +5,7 @@ import chromadb
 import pymupdf
 from llama_index.core import VectorStoreIndex, SimpleDirectoryReader, Settings, Document, StorageContext
 from llama_index.core.node_parser import SemanticSplitterNodeParser
+from llama_index.core.postprocessor import SimilarityPostprocessor
 from llama_index.vector_stores.chroma import ChromaVectorStore
 from llama_index.embeddings.huggingface import HuggingFaceEmbedding
 from llama_index.llms.cerebras import Cerebras
@@ -20,6 +21,7 @@ if not CEREBRAS_API_KEY:
 
 Settings.llm = Cerebras(model=settings.llm.model_name, api_key=CEREBRAS_API_KEY)
 embed_model = HuggingFaceEmbedding(model_name=settings.embedding.model_name, trust_remote_code=True)
+embed_chunking_model = HuggingFaceEmbedding(model_name="sentence-transformers/all-MiniLM-L12-v2")
 
 def clean_text(text: str) -> str:
     text = re.sub(r'[^\w\s\.]', '', text)
@@ -46,8 +48,9 @@ def get_documents(path: str):
         return []
 
     print(f"📂 Scanning folder: {path}")
+    filenames = sorted(os.listdir(path))
 
-    for filename in os.listdir(path):
+    for filename in filenames:
         full_path = os.path.join(path, filename)
         try:
             if filename.lower().endswith(".pdf"):
@@ -59,10 +62,15 @@ def get_documents(path: str):
         except Exception as e:
             print(f"   ❌ Error reading file {filename}: {e}")
 
+    def _simple_sentence_splitter(text: str):
+        sentences = re.split(r'(?<=[\.\!\?])\s+', text.strip())
+        return [s.strip() for s in sentences if s.strip()]
+
     splitter = SemanticSplitterNodeParser(
         buffer_size=1,
         breakpoint_percentile_threshold=70,
-        embed_model=embed_model
+        sentence_splitter=_simple_sentence_splitter,
+        embed_model=embed_chunking_model
     )
     nodes = splitter.get_nodes_from_documents(documents)
     return nodes
@@ -101,7 +109,11 @@ def initialize_index():
 _index_instance = initialize_index()
 
 def get_response(query_text: str):
-    query_engine = _index_instance.as_query_engine(similarity_top_k=settings.vector_store.top_k)
+    # processor = SimilarityPostprocessor(similarity_cutoff=0.15)
+    query_engine = _index_instance.as_query_engine(
+        similarity_top_k=settings.vector_store.top_k,
+        # node_postprocessors=[processor]
+    )
     response = query_engine.query(query_text)
     return response
 
