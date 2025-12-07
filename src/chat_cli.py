@@ -7,7 +7,7 @@ from rich.layout import Layout
 from rich.live import Live
 import sys
 
-from src.rag import get_response
+from src.rag import get_response, check_for_updates, update_knowledge_base
 
 console = Console()
 
@@ -22,6 +22,22 @@ def print_banner():
 def main():
     console.clear()
     print_banner()
+
+    changes = check_for_updates()
+    if changes:
+        console.print("\n[bold yellow]📢 Knowledge Base Updates Detected:[/bold yellow]")
+        if changes['added']:
+            console.print(f"   [green]+ Added: {', '.join(changes['added'])}[/green]")
+        if changes['modified']:
+            console.print(f"   [blue]~ Modified: {', '.join(changes['modified'])}[/blue]")
+        if changes['deleted']:
+            console.print(f"   [red]- Deleted: {', '.join(changes['deleted'])}[/red]")
+        
+        if Prompt.ask("\n[bold cyan]🔄 Do you want to update the database now?[/bold cyan]", choices=["y", "n"], default="y") == "y":
+            with console.status("[bold magenta]🔄 Updating knowledge base...[/bold magenta]"):
+                update_knowledge_base(changes)
+        else:
+             console.print("[dim]Update skipped.[/dim]")
 
     while True:
         try:

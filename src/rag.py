@@ -1,6 +1,8 @@
 import os
 import shutil
 import re
+import json
+import time
 import chromadb
 import pymupdf
 from llama_index.core import VectorStoreIndex, SimpleDirectoryReader, Settings, Document, StorageContext
@@ -23,6 +25,8 @@ Settings.llm = Cerebras(model=settings.llm.model_name, api_key=CEREBRAS_API_KEY)
 embed_model = HuggingFaceEmbedding(model_name=settings.embedding.model_name, trust_remote_code=True)
 embed_chunking_model = HuggingFaceEmbedding(model_name="sentence-transformers/all-MiniLM-L12-v2")
 
+STATE_FILE = os.path.join(settings.vector_store.path, "kb_state.json")
+
 def clean_text(text: str) -> str:
     text = re.sub(r'[^\w\s\.]', '', text)
     text = text.replace('\n', ' ')
@@ -40,6 +44,18 @@ def get_document_from_txt(path_to_txt: str) -> Document:
         text = f.read()
     text = clean_text(text)
     return Document(text=text, metadata={"file_path": path_to_txt, "file_name": os.path.basename(path_to_txt)})
+
+def get_node_parser():
+    def _simple_sentence_splitter(text: str):
+        sentences = re.split(r'(?<=[\.\!\?])\s+', text.strip())
+        return [s.strip() for s in sentences if s.strip()]
+
+    return SemanticSplitterNodeParser(
+        buffer_size=1,
+        breakpoint_percentile_threshold=70,
+        sentence_splitter=_simple_sentence_splitter,
+        embed_model=embed_chunking_model
+    )
 
 def get_documents(path: str):
     documents = []
@@ -62,18 +78,100 @@ def get_documents(path: str):
         except Exception as e:
             print(f"   ❌ Error reading file {filename}: {e}")
 
-    def _simple_sentence_splitter(text: str):
-        sentences = re.split(r'(?<=[\.\!\?])\s+', text.strip())
-        return [s.strip() for s in sentences if s.strip()]
-
-    splitter = SemanticSplitterNodeParser(
-        buffer_size=1,
-        breakpoint_percentile_threshold=70,
-        sentence_splitter=_simple_sentence_splitter,
-        embed_model=embed_chunking_model
-    )
+    splitter = get_node_parser()
     nodes = splitter.get_nodes_from_documents(documents)
     return nodes
+
+def get_current_state(path: str):
+    state = {}
+    if not os.path.exists(path):
+        return state
+    for filename in os.listdir(path):
+        full_path = os.path.join(path, filename)
+        if os.path.isfile(full_path) and (filename.lower().endswith('.pdf') or filename.lower().endswith('.txt')):
+             state[filename] = os.path.getmtime(full_path)
+    return state
+
+def check_for_updates():
+    domain_path = settings.domain.domain_path
+
+    if not os.path.exists(STATE_FILE):
+        current_state = get_current_state(domain_path)
+        os.makedirs(os.path.dirname(STATE_FILE), exist_ok=True)
+
+        with open(STATE_FILE, 'w') as f:
+            json.dump(current_state, f)
+
+        return None
+
+    with open(STATE_FILE, 'r') as f:
+        try:
+            saved_state = json.load(f)
+        except json.JSONDecodeError:
+            saved_state = {}
+
+    current_state = get_current_state(domain_path)
+    changes = {'added': [], 'modified': [], 'deleted': []}
+
+    for filename, mtime in current_state.items():
+        if filename not in saved_state:
+            changes['added'].append(filename)
+        elif abs(mtime - saved_state[filename]) > 1: # 1 second tolerance
+            changes['modified'].append(filename)
+
+    for filename in saved_state:
+        if filename not in current_state:
+            changes['deleted'].append(filename)
+
+    if not any(changes.values()):
+        return None
+
+    return changes
+
+def update_knowledge_base(changes):
+    domain_path = settings.domain.domain_path
+    db_path = settings.vector_store.path
+    collection_name = settings.vector_store.collection_name
+    db = chromadb.PersistentClient(path=db_path)
+    collection = db.get_collection(name=collection_name)
+    files_to_delete = changes['deleted'] + changes['modified']
+
+    for filename in files_to_delete:
+        print(f"🗑️ Removing old chunks for: {filename}")
+        collection.delete(where={"file_name": filename})
+
+    files_to_add = changes['added'] + changes['modified']
+
+    if files_to_add:
+        print(f"🔄 Processing {len(files_to_add)} new/updated files...")
+        new_documents = []
+
+        for filename in files_to_add:
+            full_path = os.path.join(domain_path, filename)
+            try:
+                if filename.lower().endswith(".pdf"):
+                    new_documents.append(get_document_from_pdf(full_path))
+                elif filename.lower().endswith(".txt"):
+                    new_documents.append(get_document_from_txt(full_path))
+                print(f"   - Processed: {filename}")
+            except Exception as e:
+                print(f"   ❌ Error reading {filename}: {e}")
+
+        if new_documents:
+             splitter = get_node_parser()
+             nodes = splitter.get_nodes_from_documents(new_documents)
+
+             if nodes:
+                 print(f"📥 Inserting {len(nodes)} chunks into database...")
+                 _index_instance.insert_nodes(nodes)
+             else:
+                 print("⚠️ No content chunks created from documents.")
+
+    current_state = get_current_state(domain_path)
+    with open(STATE_FILE, 'w') as f:
+        json.dump(current_state, f)
+
+    print("✅ Knowledge base updated!")
 
 def initialize_index():
     db_path = settings.vector_store.path
