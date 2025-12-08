@@ -20,7 +20,8 @@ from src.doc_parser import (
     get_document_from_md,
     get_document_from_docx,
     get_document_from_csv,
-    get_document_from_xlsx
+    get_document_from_xlsx,
+    get_document_from_image
 )
 
 load_dotenv()
@@ -80,6 +81,9 @@ def get_documents(path: str):
             elif filename.lower().endswith(".xlsx"):
                 documents.append(get_document_from_xlsx(full_path))
                 print(f"   - Added XLSX: {filename}")
+            elif filename.lower().endswith((".png", ".jpg", ".jpeg", ".bmp", ".gif")):
+                documents.append(get_document_from_image(full_path))
+                print(f"   - Added IMAGE: {filename}")
         except Exception as e:
             print(f"   ❌ Error reading file {filename}: {e}")
 
@@ -95,7 +99,7 @@ def get_current_state(path: str):
         full_path = os.path.join(path, filename)
         if os.path.isfile(full_path) and (filename.lower().endswith('.pdf')
             or filename.lower().endswith('.txt') or filename.lower().endswith('.csv') or filename.lower().endswith('.xlsx')
-            or filename.lower().endswith('.md')) or filename.lower().endswith('.docx'):
+            or filename.lower().endswith('.md')) or filename.lower().endswith('.docx') or filename.lower().endswith(('.png', '.jpg', '.jpeg', '.bmp', '.gif')):
              state[filename] = os.path.getmtime(full_path)
     return state
 
@@ -168,6 +172,8 @@ def update_knowledge_base(changes):
                     new_documents.append(get_document_from_csv(full_path))
                 elif filename.lower().endswith(".xlsx"):
                     new_documents.append(get_document_from_xlsx(full_path))
+                elif filename.lower().endswith((".png", ".jpg", ".jpeg", ".bmp", ".gif")):
+                    new_documents.append(get_document_from_image(full_path))
                 print(f"   - Processed: {filename}")
             except Exception as e:
                 print(f"   ❌ Error reading {filename}: {e}")

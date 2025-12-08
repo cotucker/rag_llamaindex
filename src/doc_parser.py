@@ -133,3 +133,22 @@ def get_document_from_xlsx(path_to_xlsx: str) -> Document:
             "file_name": os.path.basename(path_to_xlsx)
         }
     )
+
+def get_document_from_image(path_to_image: str) -> Document | None:
+    with open(path_to_image, "rb") as f:
+        image_bytes = f.read()
+    caption = caption_image(image_bytes)
+    if not caption:
+        return None
+    text = (
+        f"Image: {caption.image_name} "
+        f"Type: {caption.image_type} "
+        f"Description: {caption.image_description}"
+    )
+    return Document(
+        text=text,
+        metadata={
+            "file_path": path_to_image,
+            "file_name": os.path.basename(path_to_image)
+        }
+    )
