@@ -207,7 +207,7 @@ def initialize_index():
 
 _index_instance = initialize_index()
 
-def get_response(query_text: str, file_filters: list[str] = None):
+def get_response(query_text: str, file_filters: list[str] = []):
     # processor = SimilarityPostprocessor(similarity_cutoff=0.15)
 
     filters = None
