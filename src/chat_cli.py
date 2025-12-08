@@ -33,7 +33,7 @@ def main():
             console.print(f"   [blue]~ Modified: {', '.join(changes['modified'])}[/blue]")
         if changes['deleted']:
             console.print(f"   [red]- Deleted: {', '.join(changes['deleted'])}[/red]")
-        
+
         if Prompt.ask("\n[bold cyan]🔄 Do you want to update the database now?[/bold cyan]", choices=["y", "n"], default="y") == "y":
             with console.status("[bold magenta]🔄 Updating knowledge base...[/bold magenta]"):
                 update_knowledge_base(changes)
@@ -52,15 +52,14 @@ def main():
             if not user_input.strip():
                 continue
 
-            # Extract @filename patterns
             file_filters = re.findall(r'@([\w\.\-_]+)', user_input)
             clean_input = re.sub(r'@[\w\.\-_]+', '', user_input).strip()
-            
+
             if not clean_input and not file_filters:
                 continue
 
             console.print("")
-            
+
             if file_filters:
                 console.print(f"[dim]🎯 Targeted documents: {', '.join(file_filters)}[/dim]")
 
