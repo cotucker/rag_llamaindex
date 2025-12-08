@@ -8,7 +8,11 @@ from rich.live import Live
 import sys
 import re
 
-from src.rag import get_response, check_for_updates, update_knowledge_base
+from src.rag import (
+    get_response,
+    check_for_updates,
+    update_knowledge_base
+)
 
 console = Console()
 
@@ -43,7 +47,7 @@ def main():
     while True:
         try:
             console.print("\n[bold green]👤 Your question:[/bold green]")
-            user_input = Prompt.ask("💬")
+            user_input = Prompt.ask("💬").strip()
 
             if user_input.lower() in ["exit", "quit", "q", "выход"]:
                 console.print("\n[bold yellow]👋 Goodbye! Session terminated.[/bold yellow]")
@@ -52,6 +56,31 @@ def main():
             if user_input.lower() in ["clear", "cls"]:
                 console.clear()
                 print_banner()
+                continue
+
+            # if user_input.lower() in ["rebuild", "rb"]:
+            #     if Prompt.ask("\n[bold red]⚠️ This will rebuild the entire knowledge base. Continue?[/bold red]", choices=["y", "n"], default="n") == "y":
+            #         with console.status("[bold magenta]🔄 Rebuilding knowledge base...[/bold magenta]"):
+            #             rebuild_knowledge_base()
+            #     else:
+            #         console.print("[dim]Rebuild cancelled.[/dim]")
+            #     continue
+
+            if user_input.lower() in ["update", "upd"]:
+                with console.status("[bold magenta]🔄 Checking for knowledge base updates...[/bold magenta]"):
+                    changes = check_for_updates()
+                    if changes:
+                        console.print("\n[bold yellow]📢 Knowledge Base Updates Detected:[/bold yellow]")
+                        if changes['added']:
+                            console.print(f"   [green]+ Added: {', '.join(changes['added'])}[/green]")
+                        if changes['modified']:
+                            console.print(f"   [blue]~ Modified: {', '.join(changes['modified'])}[/blue]")
+                        if changes['deleted']:
+                            console.print(f"   [red]- Deleted: {', '.join(changes['deleted'])}[/red]")
+
+                        update_knowledge_base(changes)
+                    else:
+                        console.print("[bold green]✅ Knowledge base is up to date.[/bold green]")
                 continue
 
             if user_input.lower() in ["help", "h", "?"]:
@@ -64,6 +93,8 @@ def main():
                 - Type [dim]exit[/dim], [dim]quit[/dim], or [dim]q[/dim] to leave the chat.
                 - Type [dim]clear[/dim] or [dim]cls[/dim] to clear the screen.
                 - Type [dim]help[/dim], [dim]h[/dim], or [dim]?[/dim] to display this help message.
+                - Type [dim]update[/dim] or [dim]upd[/dim] to check for knowledge base updates.
+                - Type [dim]rebuild[/dim] or [dim]rb[/dim] to rebuild the entire knowledge base.
                 """
                 console.print(Panel(help_text, border_style="cyan", title="Help", title_align="left"))
                 continue
