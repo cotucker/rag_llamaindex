@@ -49,6 +49,25 @@ def main():
                 console.print("\n[bold yellow]👋 Goodbye! Session terminated.[/bold yellow]")
                 break
 
+            if user_input.lower() in ["clear", "cls"]:
+                console.clear()
+                print_banner()
+                continue
+
+            if user_input.lower() in ["help", "h", "?"]:
+                console.clear()
+                help_text = """
+                [bold cyan]💡 RAG AI Chat Help:[/bold cyan]
+                - Type your question and press Enter to get an answer.
+                - To target specific documents, use the syntax: [dim]@filename.ext[/dim] in your question.
+                  Example: [dim]What is the summary of the report? @report.pdf[/dim]
+                - Type [dim]exit[/dim], [dim]quit[/dim], or [dim]q[/dim] to leave the chat.
+                - Type [dim]clear[/dim] or [dim]cls[/dim] to clear the screen.
+                - Type [dim]help[/dim], [dim]h[/dim], or [dim]?[/dim] to display this help message.
+                """
+                console.print(Panel(help_text, border_style="cyan", title="Help", title_align="left"))
+                continue
+
             if not user_input.strip():
                 continue
 
@@ -67,8 +86,6 @@ def main():
                 response = get_response(clean_input, file_filters=file_filters)
 
             response_text = str(response)
-            console.print("[bold purple]🤖 AI Answer:[/bold purple]")
-            console.print(Panel(Markdown(response_text), border_style="purple", title="Result", title_align="left"))
 
             if hasattr(response, 'source_nodes') and response.source_nodes:
                 tree = Tree("📚 [dim]Knowledge sources:[/dim]")
@@ -90,6 +107,9 @@ def main():
                 console.print("")
             else:
                  console.print("[dim italic]RAG did not return source nodes.[/dim]\n")
+
+            console.print("[bold purple]🤖 AI Answer:[/bold purple]")
+            console.print(Panel(Markdown(response_text), border_style="purple", title="Result", title_align="left"))
         except KeyboardInterrupt:
             console.print("\n[bold red]⛔ User interruption.[/bold red]")
             break
