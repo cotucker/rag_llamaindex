@@ -14,7 +14,7 @@ from llama_index.llms.cerebras import Cerebras
 from dotenv import load_dotenv
 from src.config import settings
 from src.doc_parser import get_images_description
-from src.doc_parser import get_document_from_pdf, get_document_from_txt
+from src.doc_parser import get_document_from_pdf, get_document_from_txt, get_document_from_md
 
 load_dotenv()
 
@@ -61,6 +61,9 @@ def get_documents(path: str):
             elif filename.lower().endswith(".txt"):
                 documents.append(get_document_from_txt(full_path))
                 print(f"   - Added TXT: {filename}")
+            elif filename.lower().endswith(".md"):
+                documents.append(get_document_from_md(full_path))
+                print(f"   - Added MD: {filename}")
         except Exception as e:
             print(f"   ❌ Error reading file {filename}: {e}")
 
@@ -74,7 +77,9 @@ def get_current_state(path: str):
         return state
     for filename in os.listdir(path):
         full_path = os.path.join(path, filename)
-        if os.path.isfile(full_path) and (filename.lower().endswith('.pdf') or filename.lower().endswith('.txt')):
+        if os.path.isfile(full_path) and (filename.lower().endswith('.pdf')
+            or filename.lower().endswith('.txt')
+            or filename.lower().endswith('.md')):
              state[filename] = os.path.getmtime(full_path)
     return state
 
@@ -124,9 +129,6 @@ def update_knowledge_base(changes):
 
     for filename in files_to_delete:
         print(f"🗑️ Removing old chunks for: {filename}")
-
-
-
         collection.delete(where={"file_name": filename})
 
     files_to_add = changes['added'] + changes['modified']
@@ -142,6 +144,8 @@ def update_knowledge_base(changes):
                     new_documents.append(get_document_from_pdf(full_path))
                 elif filename.lower().endswith(".txt"):
                     new_documents.append(get_document_from_txt(full_path))
+                elif filename.lower().endswith(".md"):
+                    new_documents.append(get_document_from_md(full_path))
                 print(f"   - Processed: {filename}")
             except Exception as e:
                 print(f"   ❌ Error reading {filename}: {e}")
