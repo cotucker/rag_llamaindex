@@ -4,7 +4,6 @@ import re
 import json
 import time
 import chromadb
-import pymupdf
 from llama_index.core import VectorStoreIndex, SimpleDirectoryReader, Settings, Document, StorageContext
 from llama_index.core.node_parser import SemanticSplitterNodeParser
 from llama_index.core.postprocessor import SimilarityPostprocessor
@@ -15,6 +14,7 @@ from llama_index.llms.cerebras import Cerebras
 from dotenv import load_dotenv
 from src.config import settings
 from src.doc_parser import get_images_description
+from src.doc_parser import get_document_from_pdf, get_document_from_txt
 
 load_dotenv()
 
@@ -29,26 +29,7 @@ embed_model = HuggingFaceEmbedding(
     model_kwargs={"attn_implementation": "sdpa"}
 )
 embed_chunking_model = HuggingFaceEmbedding(model_name="sentence-transformers/all-MiniLM-L12-v2")
-
 STATE_FILE = os.path.join(settings.vector_store.path, "kb_state.json")
-
-def clean_text(text: str) -> str:
-    text = re.sub(r'[^\w\s\.]', '', text)
-    text = text.replace('\n', ' ')
-    text = re.sub(r'\s+', ' ', text)
-    return text.strip()
-
-def get_document_from_pdf(path_to_pdf: str) -> Document:
-    doc = pymupdf.open(path_to_pdf)
-    text = ' '.join([page.get_text() + ' ' +  get_images_description(page) for page in doc])
-    text = clean_text(text)
-    return Document(text=text, metadata={"file_path": path_to_pdf, "file_name": os.path.basename(path_to_pdf)})
-
-def get_document_from_txt(path_to_txt: str) -> Document:
-    with open(path_to_txt, "r", encoding="utf-8") as f:
-        text = f.read()
-    text = clean_text(text)
-    return Document(text=text, metadata={"file_path": path_to_txt, "file_name": os.path.basename(path_to_txt)})
 
 def get_node_parser():
     def _simple_sentence_splitter(text: str):

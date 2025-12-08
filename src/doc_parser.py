@@ -1,21 +1,11 @@
 import fitz
 import io
+import re
+import os
 from PIL import Image
+import pymupdf
 from src.image_captioning import caption_image
-
-file = "data/The Rust Programming Language.pdf"
-pdf_file = fitz.open(file)
-
-for page_index in range(len(pdf_file)):
-    page = pdf_file.load_page(page_index)
-    image_list = page.get_images(full=True)
-
-    for image_index, img in enumerate(image_list, start=1):
-        xref = img[0]
-        base_image = pdf_file.extract_image(xref)
-        image_bytes = base_image["image"]
-        image_ext = base_image["ext"]
-        image_name = f"image{page_index+1}_{image_index}.{image_ext}"
+from llama_index.core import Document
 
 def get_images_description(page) -> str:
     image_list = page.get_images(full=True)
@@ -40,3 +30,21 @@ def get_images_description(page) -> str:
 
     result = '\n'.join(descriptions)
     return result
+
+def clean_text(text: str) -> str:
+    text = re.sub(r'[^\w\s\.]', '', text)
+    text = text.replace('\n', ' ')
+    text = re.sub(r'\s+', ' ', text)
+    return text.strip()
+
+def get_document_from_pdf(path_to_pdf: str) -> Document:
+    doc = pymupdf.open(path_to_pdf)
+    text = ' '.join([page.get_text() + ' ' +  get_images_description(page) for page in doc])
+    text = clean_text(text)
+    return Document(text=text, metadata={"file_path": path_to_pdf, "file_name": os.path.basename(path_to_pdf)})
+
+def get_document_from_txt(path_to_txt: str) -> Document:
+    with open(path_to_txt, "r", encoding="utf-8") as f:
+        text = f.read()
+    text = clean_text(text)
+    return Document(text=text, metadata={"file_path": path_to_txt, "file_name": os.path.basename(path_to_txt)})
