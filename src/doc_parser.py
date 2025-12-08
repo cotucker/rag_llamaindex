@@ -26,6 +26,8 @@ def get_images_description(page) -> str:
         base_image = page.parent.extract_image(xref)
         image_bytes = base_image["image"]
         caption = caption_image(image_bytes)
+        if not caption:
+            continue
         desc_str = (
             f"Image: {caption.image_name} "
             f"Type: {caption.image_type} "

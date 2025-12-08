@@ -23,7 +23,11 @@ if not CEREBRAS_API_KEY:
     raise ValueError("CEREBRAS_API_KEY environment variable is not set.")
 
 Settings.llm = Cerebras(model=settings.llm.model_name, api_key=CEREBRAS_API_KEY)
-embed_model = HuggingFaceEmbedding(model_name=settings.embedding.model_name, trust_remote_code=True)
+embed_model = HuggingFaceEmbedding(
+    model_name=settings.embedding.model_name,
+    trust_remote_code=True,
+    model_kwargs={"attn_implementation": "sdpa"}
+)
 embed_chunking_model = HuggingFaceEmbedding(model_name="sentence-transformers/all-MiniLM-L12-v2")
 
 STATE_FILE = os.path.join(settings.vector_store.path, "kb_state.json")
@@ -139,6 +143,9 @@ def update_knowledge_base(changes):
 
     for filename in files_to_delete:
         print(f"🗑️ Removing old chunks for: {filename}")
+
+
+
         collection.delete(where={"file_name": filename})
 
     files_to_add = changes['added'] + changes['modified']
@@ -178,7 +185,13 @@ def initialize_index():
     db_path = settings.vector_store.path
     collection_name = settings.vector_store.collection_name
     db = chromadb.PersistentClient(path=db_path)
-    chroma_collection = db.get_or_create_collection(name=collection_name)
+    hnsw_config = {
+        "hnsw:space": "cosine",
+        "hnsw:construction_ef": 200,
+        "hnsw:M": 32,
+        "hnsw:search_ef": 100
+    }
+    chroma_collection = db.get_or_create_collection(name=collection_name, metadata=hnsw_config)
     vector_store = ChromaVectorStore(chroma_collection=chroma_collection)
     storage_context = StorageContext.from_defaults(vector_store=vector_store)
 
@@ -209,8 +222,8 @@ _index_instance = initialize_index()
 
 def get_response(query_text: str, file_filters: list[str] = []):
     # processor = SimilarityPostprocessor(similarity_cutoff=0.15)
-
     filters = None
+
     if file_filters:
         print(f"🔍 Filtering search by documents: {file_filters}")
         filters = MetadataFilters(

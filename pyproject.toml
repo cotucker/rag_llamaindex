@@ -5,6 +5,7 @@ description = "Intelligent question-answering systems over your documents using 
 readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [
+    "cerebras-cloud-sdk>=1.59.0",
     "chromadb>=1.3.5",
     "google-genai>=1.53.0",
     "llama-index>=0.14.9",
