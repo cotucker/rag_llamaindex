@@ -5,6 +5,7 @@ import os
 import pymupdf
 import markdown
 import docx
+import pandas as pd
 from PIL import Image
 from src.image_captioning import caption_image
 from llama_index.core import Document
@@ -106,5 +107,29 @@ def get_document_from_docx(path_to_docx: str) -> Document:
         metadata={
             "file_path": path_to_docx,
             "file_name": os.path.basename(path_to_docx)
+        }
+    )
+
+def get_document_from_csv(path_to_csv: str) -> Document:
+    df = pd.read_csv(path_to_csv)
+    text = df.to_string()
+    text = clean_text(text)
+    return Document(
+        text=text,
+        metadata={
+            "file_path": path_to_csv,
+            "file_name": os.path.basename(path_to_csv)
+        }
+    )
+
+def get_document_from_xlsx(path_to_xlsx: str) -> Document:
+    df = pd.read_excel(path_to_xlsx)
+    text = df.to_string()
+    text = clean_text(text)
+    return Document(
+        text=text,
+        metadata={
+            "file_path": path_to_xlsx,
+            "file_name": os.path.basename(path_to_xlsx)
         }
     )
