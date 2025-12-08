@@ -14,7 +14,7 @@ from llama_index.llms.cerebras import Cerebras
 from dotenv import load_dotenv
 from src.config import settings
 from src.doc_parser import get_images_description
-from src.doc_parser import get_document_from_pdf, get_document_from_txt, get_document_from_md
+from src.doc_parser import get_document_from_pdf, get_document_from_txt, get_document_from_md, get_document_from_docx
 
 load_dotenv()
 
@@ -64,6 +64,9 @@ def get_documents(path: str):
             elif filename.lower().endswith(".md"):
                 documents.append(get_document_from_md(full_path))
                 print(f"   - Added MD: {filename}")
+            elif filename.lower().endswith(".docx"):
+                documents.append(get_document_from_docx(full_path))
+                print(f"   - Added DOCX: {filename}")
         except Exception as e:
             print(f"   ❌ Error reading file {filename}: {e}")
 
@@ -79,7 +82,7 @@ def get_current_state(path: str):
         full_path = os.path.join(path, filename)
         if os.path.isfile(full_path) and (filename.lower().endswith('.pdf')
             or filename.lower().endswith('.txt')
-            or filename.lower().endswith('.md')):
+            or filename.lower().endswith('.md')) or filename.lower().endswith('.docx'):
              state[filename] = os.path.getmtime(full_path)
     return state
 
@@ -146,6 +149,8 @@ def update_knowledge_base(changes):
                     new_documents.append(get_document_from_txt(full_path))
                 elif filename.lower().endswith(".md"):
                     new_documents.append(get_document_from_md(full_path))
+                elif filename.lower().endswith(".docx"):
+                    new_documents.append(get_document_from_docx(full_path))
                 print(f"   - Processed: {filename}")
             except Exception as e:
                 print(f"   ❌ Error reading {filename}: {e}")
@@ -173,8 +178,8 @@ def initialize_index():
     hnsw_config = {
         "hnsw:space": "cosine",
         "hnsw:construction_ef": 200,
-        "hnsw:M": 32,
-        "hnsw:search_ef": 100
+        "hnsw:M": 64,
+        "hnsw:search_ef": 200
     }
     chroma_collection = db.get_or_create_collection(name=collection_name, metadata=hnsw_config)
     vector_store = ChromaVectorStore(chroma_collection=chroma_collection)

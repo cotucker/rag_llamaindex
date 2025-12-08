@@ -4,6 +4,7 @@ import re
 import os
 import pymupdf
 import markdown
+import docx
 from PIL import Image
 from src.image_captioning import caption_image
 from llama_index.core import Document
@@ -80,5 +81,30 @@ def get_document_from_md(path_to_md: str) -> Document:
         metadata={
             "file_path": path_to_md,
             "file_name": os.path.basename(path_to_md)
+        }
+    )
+
+def get_document_from_docx(path_to_docx: str) -> Document:
+    doc = docx.Document(path_to_docx)
+    text_content = []
+
+    for para in doc.paragraphs:
+        if para.text.strip():
+            text_content.append(para.text)
+
+    if doc.tables:
+        text_content.append("\n--- TABLES DATA ---\n")
+        for table in doc.tables:
+            for row in table.rows:
+                row_text = [cell.text.strip() for cell in row.cells]
+                text_content.append(" | ".join(row_text))
+            text_content.append("")
+
+    full_text = "\n".join(text_content)
+    return Document(
+        text=full_text,
+        metadata={
+            "file_path": path_to_docx,
+            "file_name": os.path.basename(path_to_docx)
         }
     )
