@@ -24,6 +24,8 @@ Open-domain datasets are readily available within the NLP research community, wi
     A multi-language dataset is TyDi QA of Clark et al., (2020). It consists of 204,000 question-answer pairs in 11 diverse languages. These languages have different linguistic features, so QA systems that do well on TyDi QA should work well across many languages. We analyzed the data quality and unique language features not found in English-only datasets. To make the task realistic, questions are written by people who don’t know the answers and are collected directly in each language without translation.
     KILT of Petroni et al., (2021) provides a dataset for several tasks e.g., open-domain question answering, fact-checking, slot filling, and entity linking require access to large, external knowledge sources. For QA, the authors provide an intensive knowledge source for many open-domain datasets such as Natural Questions, HotpotQA, TriviaQA, and ELI5. This means that they added the paragraphs supporting the ground-truth answers.
 
+The Roman Empire reached its peak in the second century AD, covering territories from Britain to the Middle East. The legions were the backbone of Rome's military power, famous for their
+
 Press enter or click to view image in full size
 Image in the paper of Petroni et al., (2021)
 

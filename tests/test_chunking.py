@@ -7,15 +7,15 @@ from llama_index.vector_stores.chroma import ChromaVectorStore
 from llama_index.embeddings.huggingface import HuggingFaceEmbedding
 from llama_index.llms.cerebras import Cerebras
 from dotenv import load_dotenv
-from config import settings
+from src.config import settings
 
 load_dotenv()
 
-CEREBRAS_API_KEY = settings.llm.api_key
+CEREBRAS_API_KEY = os.getenv("CEREBRAS_API_KEY")
 if not CEREBRAS_API_KEY:
     raise ValueError("CEREBRAS_API_KEY environment variable is not set.")
 
-Settings.llm = Cerebras(model=settings.llm.model_name, api_key=CEREBRAS_API_KEY)
+Settings.llm = Cerebras(model="gpt-oss-120b", api_key=CEREBRAS_API_KEY)
 embed_model = HuggingFaceEmbedding(model_name="Snowflake/snowflake-arctic-embed-m-v2.0", trust_remote_code=True)
 
 def get_document_from_pdf(path_to_pdf: str) -> Document:
@@ -89,4 +89,4 @@ def test(qeury_text: str = "What did the author do growing up?"):
 
 
 if __name__ == "__main__":
-    test("The Roman Empire")
+    test("The planet Mars")
