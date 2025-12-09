@@ -7,7 +7,7 @@ import markdown
 import docx
 import pandas as pd
 from PIL import Image
-from src.image_captioning import caption_image
+from src.image_captioning import caption_image, caption_image_groq
 from llama_index.core import Document
 from bs4 import BeautifulSoup
 
@@ -19,7 +19,7 @@ def get_images_description(page) -> str:
         xref = img[0]
         base_image = page.parent.extract_image(xref)
         image_bytes = base_image["image"]
-        caption = caption_image(image_bytes)
+        caption = caption_image_groq(image_bytes)
         if not caption:
             continue
         desc_str = (

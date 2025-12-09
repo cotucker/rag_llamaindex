@@ -12,6 +12,7 @@ from llama_index.core.vector_stores import MetadataFilters, MetadataFilter, Filt
 from llama_index.vector_stores.chroma import ChromaVectorStore
 from llama_index.embeddings.huggingface import HuggingFaceEmbedding
 from llama_index.llms.cerebras import Cerebras
+from llama_index.llms.groq import Groq
 from dotenv import load_dotenv
 from src.config import settings
 from src.doc_parser import get_images_description
@@ -28,10 +29,12 @@ from src.doc_parser import (
 load_dotenv()
 
 CEREBRAS_API_KEY = settings.llm.api_key
+GROQ_API_KEY = os.environ.get("GROQ_API_KEY")
 if not CEREBRAS_API_KEY:
     raise ValueError("CEREBRAS_API_KEY environment variable is not set.")
 
-Settings.llm = Cerebras(model=settings.llm.model_name, api_key=CEREBRAS_API_KEY)
+# Settings.llm = Cerebras(model=settings.llm.model_name, api_key=CEREBRAS_API_KEY)
+Settings.llm = Groq(model="openai/gpt-oss-120b", api_key=GROQ_API_KEY)
 embed_model = HuggingFaceEmbedding(
     model_name=settings.embedding.model_name,
     trust_remote_code=True,
