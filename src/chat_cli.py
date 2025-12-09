@@ -11,7 +11,8 @@ import re
 from src.rag import (
     get_response,
     check_for_updates,
-    update_knowledge_base
+    update_knowledge_base,
+    rebuild_knowledge_base
 )
 
 console = Console()
@@ -58,13 +59,13 @@ def main():
                 print_banner()
                 continue
 
-            # if user_input.lower() in ["rebuild", "rb"]:
-            #     if Prompt.ask("\n[bold red]⚠️ This will rebuild the entire knowledge base. Continue?[/bold red]", choices=["y", "n"], default="n") == "y":
-            #         with console.status("[bold magenta]🔄 Rebuilding knowledge base...[/bold magenta]"):
-            #             rebuild_knowledge_base()
-            #     else:
-            #         console.print("[dim]Rebuild cancelled.[/dim]")
-            #     continue
+            if user_input.lower() in ["rebuild", "rb"]:
+                if Prompt.ask("\n[bold red]⚠️ This will rebuild the entire knowledge base. Continue?[/bold red]", choices=["y", "n"], default="n") == "y":
+                    with console.status("[bold magenta]🔄 Rebuilding knowledge base...[/bold magenta]"):
+                        rebuild_knowledge_base()
+                else:
+                    console.print("[dim]Rebuild cancelled.[/dim]")
+                continue
 
             if user_input.lower() in ["update", "upd"]:
                 with console.status("[bold magenta]🔄 Checking for knowledge base updates...[/bold magenta]"):

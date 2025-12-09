@@ -194,6 +194,26 @@ def update_knowledge_base(changes):
 
     print("✅ Knowledge base updated!")
 
+def rebuild_knowledge_base():
+    db_path = settings.vector_store.path
+    db = chromadb.PersistentClient(path=db_path)
+    db.delete_collection(name=settings.vector_store.collection_name)
+
+    if not os.path.exists(db_path):
+        return
+
+    if os.path.isfile(db_path) or os.path.islink(db_path):
+        try:
+            os.remove(db_path)
+        except OSError:
+            pass
+    elif os.path.isdir(db_path):
+        shutil.rmtree(db_path, ignore_errors=True)
+
+    global _index_instance
+    _index_instance = initialize_index()
+    print("✅ Knowledge base rebuilt!")
+
 def initialize_index():
     db_path = settings.vector_store.path
     collection_name = settings.vector_store.collection_name
@@ -255,4 +275,4 @@ def get_response(query_text: str, file_filters: list[str] = []):
     return response
 
 if __name__ == "__main__":
-    get_document_from_pdf("data/test.pdf")
+    rebuild_knowledge_base()
