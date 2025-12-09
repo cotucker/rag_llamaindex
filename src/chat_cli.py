@@ -63,6 +63,7 @@ def main():
                 if Prompt.ask("\n[bold red]⚠️ This will rebuild the entire knowledge base. Continue?[/bold red]", choices=["y", "n"], default="n") == "y":
                     with console.status("[bold magenta]🔄 Rebuilding knowledge base...[/bold magenta]"):
                         rebuild_knowledge_base()
+                        console.print("\n[bold green]✅ Knowledge base rebuilt successfully.[/bold green]")
                 else:
                     console.print("[dim]Rebuild cancelled.[/dim]")
                 continue
@@ -146,7 +147,10 @@ def main():
             console.print("\n[bold red]⛔ User interruption.[/bold red]")
             break
         except Exception as e:
+            import traceback
             console.print(f"\n[bold red]❌ An error occurred:[/bold red] {e}")
+            console.print("[bold red]Traceback:[/bold red]")
+            console.print(traceback.format_exc())
 
 if __name__ == "__main__":
     main()

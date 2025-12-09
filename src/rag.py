@@ -1,5 +1,6 @@
 import os
 import shutil
+import gc
 import re
 import json
 import time
@@ -195,24 +196,64 @@ def update_knowledge_base(changes):
     print("✅ Knowledge base updated!")
 
 def rebuild_knowledge_base():
-    db_path = settings.vector_store.path
-    db = chromadb.PersistentClient(path=db_path)
-    db.delete_collection(name=settings.vector_store.collection_name)
-
-    if not os.path.exists(db_path):
-        return
-
-    if os.path.isfile(db_path) or os.path.islink(db_path):
-        try:
-            os.remove(db_path)
-        except OSError:
-            pass
-    elif os.path.isdir(db_path):
-        shutil.rmtree(db_path, ignore_errors=True)
-
+    print("⚠️  Initiating full knowledge base rebuild...")
     global _index_instance
-    _index_instance = initialize_index()
-    print("✅ Knowledge base rebuilt!")
+    _index_instance = None
+    gc.collect()
+    time.sleep(0.5)
+    db_path = settings.vector_store.path
+    collection_name = settings.vector_store.collection_name
+
+    try:
+        db = chromadb.PersistentClient(path=db_path)
+        try:
+            db.delete_collection(name=collection_name)
+            print(f"🗑️  Collection '{collection_name}' deleted via API.")
+        except ValueError:
+            pass
+    except Exception as e:
+        print(f"⚠️ API cleanup warning: {e}")
+
+    if os.path.exists(db_path):
+        print("🧹 Cleaning up storage artifacts...")
+        for item in os.listdir(db_path):
+            item_path = os.path.join(db_path, item)
+
+            try:
+                if os.path.isdir(item_path):
+                    shutil.rmtree(item_path)
+                    print(f"   - Removed artifact: {item}")
+
+                elif os.path.isfile(item_path) and not item.endswith(".sqlite3"):
+                     os.remove(item_path)
+
+            except PermissionError:
+                pass
+            except Exception as e:
+                print(f"   ⚠️ Could not remove {item}: {e}")
+
+    if os.path.exists(STATE_FILE):
+        try:
+            os.remove(STATE_FILE)
+            print(f"🗑️  Deleted state file.")
+        except:
+            pass
+
+    print("🔄 Starting re-indexing process...")
+    try:
+        _index_instance = initialize_index()
+
+        try:
+            current_state = get_current_state(settings.domain.domain_path)
+            os.makedirs(os.path.dirname(STATE_FILE), exist_ok=True)
+            with open(STATE_FILE, 'w') as f:
+                json.dump(current_state, f)
+            print("💾 New state file saved.")
+        except Exception as e:
+            print(f"⚠️ Warning: Could not save state file: {e}")
+
+    except Exception as e:
+        print(f"❌ Critical error during indexing: {e}")
 
 def initialize_index():
     db_path = settings.vector_store.path
