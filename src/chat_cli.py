@@ -12,7 +12,8 @@ from src.rag import (
     get_response,
     check_for_updates,
     update_knowledge_base,
-    rebuild_knowledge_base
+    rebuild_knowledge_base,
+    reset_chat_history
 )
 
 console = Console()
@@ -63,9 +64,16 @@ def main():
                 if Prompt.ask("\n[bold red]⚠️ This will rebuild the entire knowledge base. Continue?[/bold red]", choices=["y", "n"], default="n") == "y":
                     with console.status("[bold magenta]🔄 Rebuilding knowledge base...[/bold magenta]"):
                         rebuild_knowledge_base()
+                        console.clear()
                         console.print("\n[bold green]✅ Knowledge base rebuilt successfully.[/bold green]")
                 else:
                     console.print("[dim]Rebuild cancelled.[/dim]")
+                continue
+
+            if user_input.lower() in ["ch", "clear history"]:
+                reset_chat_history()
+                console.clear()
+                console.print("[dim]🧹 Chat history cleared.[/dim]")
                 continue
 
             if user_input.lower() in ["update", "upd"]:
@@ -97,6 +105,7 @@ def main():
                 - Type [dim]help[/dim], [dim]h[/dim], or [dim]?[/dim] to display this help message.
                 - Type [dim]update[/dim] or [dim]upd[/dim] to check for knowledge base updates.
                 - Type [dim]rebuild[/dim] or [dim]rb[/dim] to rebuild the entire knowledge base.
+                - Type [dim]clear history[/dim] or [dim]ch[/dim] to clear the chat history.
                 """
                 console.print(Panel(help_text, border_style="cyan", title="Help", title_align="left"))
                 continue

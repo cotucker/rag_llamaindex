@@ -308,7 +308,6 @@ def reset_chat_history():
     global _memory
     if _memory:
         _memory.reset()
-    print("🧹 Chat history cleared.")
 
 _index_instance = initialize_index()
 _memory = None
@@ -322,6 +321,7 @@ def get_response(query_text: str, file_filters: list[str] = []):
         return "Chat history cleared."
 
     filters = None
+
     if file_filters:
         print(f"🔍 Filtering chat by documents: {file_filters}")
         filters = MetadataFilters(
@@ -332,23 +332,32 @@ def get_response(query_text: str, file_filters: list[str] = []):
         )
 
     memory = initialize_memory()
-
+    system_prompt = (
+        "You are a concise technical assistant. "
+        "Answer questions strictly based on the provided context. "
+        "Keep your answers short, direct, and to the point. "
+        "Do not use ASCII tables or markdown tables unless explicitly asked. "
+        "Use markdown formatting for answers when appropriate. "
+        "Avoid filler phrases like 'Here is the information' or 'Based on the documents'."
+    )
+    context_template = (
+        "Context information is below:\n"
+        "---------------------\n"
+        "{context_str}\n"
+        "---------------------\n"
+        "Given the context and previous chat history, answer the question: {query_str}\n"
+        "Answer concisely in 1-3 sentences if possible."
+    )
     chat_engine = _index_instance.as_chat_engine(
         chat_mode="condense_plus_context",
-        memory=memory,          # <--- Важно: передаем существующий объект памяти
-        filters=filters,        # <--- Важно: применяем фильтры для этого конкретного запроса
+        memory=memory,
+        filters=filters,
         similarity_top_k=settings.vector_store.top_k,
-        context_prompt=(
-            "You are a helpful assistant capable of answering questions about the provided documents.\n"
-            "Here are the relevant documents for the context:\n"
-            "{context_str}\n"
-            "\nInstruction: Use the previous chat history, or the context above, to interact and help the user."
-        ),
+        system_prompt=system_prompt,
+        context_prompt=context_template,
         verbose=False
     )
-
     response = chat_engine.chat(query_text)
-
     return response
 
 if __name__ == "__main__":
