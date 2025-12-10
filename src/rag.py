@@ -9,6 +9,7 @@ from llama_index.core import VectorStoreIndex, SimpleDirectoryReader, Settings, 
 from llama_index.core.node_parser import SemanticSplitterNodeParser
 from llama_index.core.postprocessor import SimilarityPostprocessor
 from llama_index.core.vector_stores import MetadataFilters, MetadataFilter, FilterCondition
+from llama_index.core.memory import ChatMemoryBuffer
 from llama_index.vector_stores.chroma import ChromaVectorStore
 from llama_index.embeddings.huggingface import HuggingFaceEmbedding
 from llama_index.llms.cerebras import Cerebras
@@ -297,14 +298,32 @@ def initialize_index():
 
     return index
 
+def initialize_memory():
+    global _memory
+    if _memory is None:
+        _memory = ChatMemoryBuffer.from_defaults(token_limit=4000)
+    return _memory
+
+def reset_chat_history():
+    global _memory
+    if _memory:
+        _memory.reset()
+    print("🧹 Chat history cleared.")
+
 _index_instance = initialize_index()
+_memory = None
 
 def get_response(query_text: str, file_filters: list[str] = []):
-    # processor = SimilarityPostprocessor(similarity_cutoff=0.15)
-    filters = None
+    if _index_instance is None:
+        raise ValueError("Index is not initialized. Run rebuild or check startup.")
 
+    if query_text.strip().lower() == "/reset":
+        reset_chat_history()
+        return "Chat history cleared."
+
+    filters = None
     if file_filters:
-        print(f"🔍 Filtering search by documents: {file_filters}")
+        print(f"🔍 Filtering chat by documents: {file_filters}")
         filters = MetadataFilters(
             filters=[
                 MetadataFilter(key="file_name", value=f) for f in file_filters
@@ -312,12 +331,24 @@ def get_response(query_text: str, file_filters: list[str] = []):
             condition=FilterCondition.OR
         )
 
-    query_engine = _index_instance.as_query_engine(
+    memory = initialize_memory()
+
+    chat_engine = _index_instance.as_chat_engine(
+        chat_mode="condense_plus_context",
+        memory=memory,          # <--- Важно: передаем существующий объект памяти
+        filters=filters,        # <--- Важно: применяем фильтры для этого конкретного запроса
         similarity_top_k=settings.vector_store.top_k,
-        filters=filters
-        # node_postprocessors=[processor]
+        context_prompt=(
+            "You are a helpful assistant capable of answering questions about the provided documents.\n"
+            "Here are the relevant documents for the context:\n"
+            "{context_str}\n"
+            "\nInstruction: Use the previous chat history, or the context above, to interact and help the user."
+        ),
+        verbose=False
     )
-    response = query_engine.query(query_text)
+
+    response = chat_engine.chat(query_text)
+
     return response
 
 if __name__ == "__main__":
