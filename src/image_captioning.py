@@ -62,7 +62,7 @@ def caption_image_groq(image_data: bytes):
                     },
                 ],
             }
-        ],
+        ],  # ty:ignore[invalid-argument-type]
         model="meta-llama/llama-4-scout-17b-16e-instruct",
         response_format={
             "type": "json_schema",
@@ -71,7 +71,7 @@ def caption_image_groq(image_data: bytes):
                 "schema": Image.model_json_schema()
             }
 
-        }
+        }  # ty:ignore[invalid-argument-type]
     )
     result = chat_completion.choices[0].message.content
     image: Image = Image(**json.loads(result))

@@ -49,6 +49,10 @@ STATE_FILE = os.path.join(settings.vector_store.path, "kb_state.json")
 ACCESS_CONTROL_FILE = "access_config.json"
 ACCESS_CONTROL_STATUS = "private"
 
+# def update_access_config(access_config: dict):
+
+
+
 def sync_access_levels():
     print("🔄 Syncing access levels across the database...")
     db_path = settings.vector_store.path
@@ -81,7 +85,7 @@ def sync_access_levels():
     print(f"📊 Scanning {total_chunks} chunks...")
 
     for i, doc_id in enumerate(existing_data["ids"]):
-        current_metadata = existing_data["metadatas"][i]
+        current_metadata = existing_data["metadatas"][i]  # ty:ignore[non-subscriptable]
         file_name = current_metadata.get("file_name")
 
         if not file_name:
@@ -91,7 +95,7 @@ def sync_access_levels():
         current_access = current_metadata.get("access_level")
 
         if current_access != target_access:
-            current_metadata["access_level"] = target_access
+            current_metadata["access_level"] = target_access  # ty:ignore[invalid-assignment]
             ids_to_update.append(doc_id)
             metadatas_to_update.append(current_metadata)
             update_count += 1
@@ -111,18 +115,30 @@ def sync_access_levels():
     else:
         print("✅ No access level changes required.")
 
+def get_access_control_config():
+    with open(ACCESS_CONTROL_FILE, 'r') as f:
+        config = json.load(f)
+    return config
+
 def get_documents_access_control():
     path = settings.domain.domain_path
     documents = []
     if not os.path.exists(path):
         os.makedirs(path)
         return []
-    filenames = sorted(os.listdir(path))
 
-def get_access_control_config():
-    with open(ACCESS_CONTROL_FILE, 'r') as f:
-        config = json.load(f)
-    return config
+    print(f"📂 Scanning folder: {path}")
+    filenames = sorted(
+        f for f in os.listdir(path)
+        if os.path.isfile(os.path.join(path, f))
+    )
+    return filenames, get_access_control_config()
+
+def save_access_control_config(config: dict):
+    config_path = ACCESS_CONTROL_FILE
+    with open(config_path, 'w') as f:
+        json.dump(config, f, indent=4)
+    set_access_control_config(config)
 
 set_access_control_config(get_access_control_config())
 
@@ -442,4 +458,4 @@ def get_response(query_text: str, file_filters: list[str] = []):
     return response
 
 if __name__ == "__main__":
-    pass
+    print(get_documents_access_control())

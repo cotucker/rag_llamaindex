@@ -1,4 +1,5 @@
 from rich.tree import Tree
+from rich.table import Table
 from rich.console import Console
 from rich.panel import Panel
 from rich.prompt import Prompt
@@ -14,7 +15,9 @@ from src.rag import (
     check_for_updates,
     update_knowledge_base,
     rebuild_knowledge_base,
-    reset_chat_history
+    reset_chat_history,
+    save_access_control_config,
+    get_documents_access_control
 )
 
 console = Console()
@@ -75,6 +78,10 @@ def main():
                 reset_chat_history()
                 console.clear()
                 console.print("[dim]🧹 Chat history cleared.[/dim]")
+                continue
+
+            if user_input.lower() == "admin":
+                run_admin_dashboard(console)
                 continue
 
             if user_input.lower() in ["update", "upd"]:
@@ -161,6 +168,78 @@ def main():
             console.print(f"\n[bold red]❌ An error occurred:[/bold red] {escape(str(e))}")
             console.print("[bold red]Traceback:[/bold red]")
             console.print(escape(str(traceback.format_exc())))
+
+def run_admin_dashboard(console: Console):
+    files_on_disk, current_config = get_documents_access_control()
+    disk_files_set = set(files_on_disk)
+    files_to_remove = [f for f in current_config if f not in disk_files_set]
+
+    if files_to_remove:
+        console.print(f"[bold yellow]🧹 Cleaning up {len(files_to_remove)} deleted files from config...[/bold yellow]")
+        for f in files_to_remove:
+            del current_config[f]
+
+    new_files = [f for f in files_on_disk if f not in current_config]
+
+    for f in new_files:
+        current_config[f] = "private" # Или 'public', как вам удобнее
+
+    while True:
+        console.clear()
+        console.print("[bold blue]🛡️  Admin Access Control Panel[/bold blue]")
+        console.print("[dim]Existing files missing from config have been added as 'private'.[/dim]")
+        console.print("[dim]Files deleted from disk have been removed from config.[/dim]\n")
+
+        table = Table(show_header=True, header_style="bold magenta")
+        table.add_column("#", style="dim", width=4)
+        table.add_column("Filename")
+        table.add_column("Access Level", justify="center")
+
+        sorted_files = sorted(files_on_disk)
+
+        for idx, filename in enumerate(sorted_files, 1):
+            level = current_config.get(filename, "private")
+
+            if level == "public":
+                level_str = "[green]PUBLIC[/green] 🌍"
+            else:
+                level_str = "[red]PRIVATE[/red] 🔒"
+
+            name_str = filename
+            if filename in new_files:
+                name_str = f"[bold yellow]{filename} (NEW)[/bold yellow]"
+
+            table.add_row(str(idx), name_str, level_str)
+
+        console.print(table)
+        console.print("\n[bold]Options:[/bold]")
+        console.print("• Enter [bold cyan]number[/bold cyan] to toggle access (e.g. '1')")
+        console.print("• Type [bold green]save[/bold green] to save changes and exit")
+        console.print("• Type [bold red]cancel[/bold red] to discard changes")
+
+        choice = Prompt.ask("\nSelect option")
+
+        if choice.lower() == "save":
+            save_access_control_config(current_config)
+            console.print("[bold green]✅ Config saved successfully![/bold green]")
+            break
+
+        elif choice.lower() in ["cancel", "q", "quit", "exit"]:
+            console.print("[bold yellow]⚠️  Changes discarded.[/bold yellow]")
+            break
+
+        try:
+            idx = int(choice)
+
+            if 1 <= idx <= len(sorted_files):
+                target_file = sorted_files[idx - 1]
+                current_level = current_config.get(target_file, "private")
+                new_level = "private" if current_level == "public" else "public"
+                current_config[target_file] = new_level
+            else:
+                console.print("[red]Invalid number![/red]")
+        except ValueError:
+            pass
 
 if __name__ == "__main__":
     main()
