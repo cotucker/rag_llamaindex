@@ -1,0 +1,8 @@
+{
+  "compare.txt": "private",
+  "The Rust Programming Language.pdf": "public",
+  "test.txt": "public",
+  "test.pdf": "public",
+  "test.md": "public",
+  "test.docx": "public"
+}

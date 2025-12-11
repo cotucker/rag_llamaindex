@@ -5,11 +5,18 @@ import os
 import pymupdf
 import markdown
 import docx
+import json
 import pandas as pd
 from PIL import Image
 from src.image_captioning import caption_image, caption_image_groq
 from llama_index.core import Document
 from bs4 import BeautifulSoup
+
+ACCESS_CONTROL_CONFIG = {}
+
+def set_access_control_config(config: dict):
+    global ACCESS_CONTROL_CONFIG
+    ACCESS_CONTROL_CONFIG = config
 
 def get_images_description(page) -> str:
     image_list = page.get_images(full=True)
@@ -51,11 +58,13 @@ def get_document_from_pdf(path_to_pdf: str) -> Document:
     doc = pymupdf.open(path_to_pdf)
     text = ' '.join([page.get_text() + ' ' +  get_images_description(page) for page in doc])
     text = clean_text(text)
+    file_name = os.path.basename(path_to_pdf)
     return Document(
         text=text,
         metadata={
             "file_path": path_to_pdf,
-            "file_name": os.path.basename(path_to_pdf)
+            "file_name": os.path.basename(path_to_pdf),
+            "access_level": ACCESS_CONTROL_CONFIG.get(file_name, "private")
         }
     )
 
@@ -63,11 +72,13 @@ def get_document_from_txt(path_to_txt: str) -> Document:
     with open(path_to_txt, "r", encoding="utf-8") as f:
         text = f.read()
     text = clean_text(text)
+    file_name = os.path.basename(path_to_txt)
     return Document(
         text=text,
         metadata={
             "file_path": path_to_txt,
-            "file_name": os.path.basename(path_to_txt)
+            "file_name": file_name,
+            "access_level": ACCESS_CONTROL_CONFIG.get(file_name, "private")
         }
     )
 
@@ -77,11 +88,13 @@ def get_document_from_md(path_to_md: str) -> Document:
 
     cleaned_markdown = clean_markdown(text)
     cleaned_text = clean_text(cleaned_markdown)
+    file_name = os.path.basename(path_to_md)
     return Document(
         text=cleaned_text,
         metadata={
             "file_path": path_to_md,
-            "file_name": os.path.basename(path_to_md)
+            "file_name": file_name,
+            "access_level": ACCESS_CONTROL_CONFIG.get(file_name, "private")
         }
     )
 
@@ -102,11 +115,14 @@ def get_document_from_docx(path_to_docx: str) -> Document:
             text_content.append("")
 
     full_text = "\n".join(text_content)
+    file_name = os.path.basename(path_to_docx)
+    cleaned_text = clean_text(full_text)
     return Document(
-        text=full_text,
+        text=cleaned_text,
         metadata={
             "file_path": path_to_docx,
-            "file_name": os.path.basename(path_to_docx)
+            "file_name": file_name,
+            "access_level": ACCESS_CONTROL_CONFIG.get(file_name, "private")
         }
     )
 
@@ -114,11 +130,13 @@ def get_document_from_csv(path_to_csv: str) -> Document:
     df = pd.read_csv(path_to_csv)
     text = df.to_string()
     text = clean_text(text)
+    file_name = os.path.basename(path_to_csv)
     return Document(
         text=text,
         metadata={
             "file_path": path_to_csv,
-            "file_name": os.path.basename(path_to_csv)
+            "file_name": file_name,
+            "access_level": ACCESS_CONTROL_CONFIG.get(file_name, "private")
         }
     )
 
@@ -126,11 +144,13 @@ def get_document_from_xlsx(path_to_xlsx: str) -> Document:
     df = pd.read_excel(path_to_xlsx)
     text = df.to_string()
     text = clean_text(text)
+    file_name = os.path.basename(path_to_xlsx)
     return Document(
         text=text,
         metadata={
             "file_path": path_to_xlsx,
-            "file_name": os.path.basename(path_to_xlsx)
+            "file_name": file_name,
+            "access_level": ACCESS_CONTROL_CONFIG.get(file_name, "private")
         }
     )
 
@@ -145,10 +165,12 @@ def get_document_from_image(path_to_image: str) -> Document | None:
         f"Type: {caption.image_type} "
         f"Description: {caption.image_description}"
     )
+    file_name = os.path.basename(path_to_image)
     return Document(
         text=text,
         metadata={
             "file_path": path_to_image,
-            "file_name": os.path.basename(path_to_image)
+            "file_name": file_name,
+            "access_level": ACCESS_CONTROL_CONFIG.get(file_name, "private")
         }
     )

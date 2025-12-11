@@ -5,6 +5,7 @@ from rich.prompt import Prompt
 from rich.markdown import Markdown
 from rich.layout import Layout
 from rich.live import Live
+from rich.markup import escape
 import sys
 import re
 
@@ -148,7 +149,7 @@ def main():
                     console.print("[dim italic]No sources found (LLM answered from its memory or hallucinated)[/dim]")
                 console.print("")
             else:
-                 console.print("[dim italic]RAG did not return source nodes.[/dim]\n")
+                 console.print("[dim italic]RAG did not return source nodes.[/]\n")
 
             console.print("[bold purple]🤖 AI Answer:[/bold purple]")
             console.print(Panel(Markdown(response_text), border_style="purple", title="Result", title_align="left"))
@@ -157,9 +158,9 @@ def main():
             break
         except Exception as e:
             import traceback
-            console.print(f"\n[bold red]❌ An error occurred:[/bold red] {e}")
+            console.print(f"\n[bold red]❌ An error occurred:[/bold red] {escape(str(e))}")
             console.print("[bold red]Traceback:[/bold red]")
-            console.print(traceback.format_exc())
+            console.print(escape(str(traceback.format_exc())))
 
 if __name__ == "__main__":
     main()

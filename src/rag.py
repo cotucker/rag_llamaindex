@@ -15,7 +15,6 @@ from llama_index.embeddings.huggingface import HuggingFaceEmbedding
 from llama_index.llms.cerebras import Cerebras
 from llama_index.llms.groq import Groq
 from src.config import settings
-from src.doc_parser import get_images_description
 from src.doc_parser import (
     get_document_from_pdf,
     get_document_from_txt,
@@ -23,7 +22,9 @@ from src.doc_parser import (
     get_document_from_docx,
     get_document_from_csv,
     get_document_from_xlsx,
-    get_document_from_image
+    get_document_from_image,
+    get_images_description,
+    set_access_control_config
 )
 
 LLM_API_KEY = settings.llm.api_key
@@ -45,6 +46,15 @@ embed_model = HuggingFaceEmbedding(
 )
 embed_chunking_model = HuggingFaceEmbedding(model_name="sentence-transformers/all-MiniLM-L12-v2")
 STATE_FILE = os.path.join(settings.vector_store.path, "kb_state.json")
+ACCESS_CONTROL_FILE = "access_config.json"
+ACCESS_CONTROL_STATUS = "private"
+
+def get_access_control_config():
+    with open(ACCESS_CONTROL_FILE, 'r') as f:
+        config = json.load(f)
+    return config
+
+set_access_control_config(get_access_control_config())
 
 def get_node_parser():
     def _simple_sentence_splitter(text: str):
@@ -320,16 +330,25 @@ def get_response(query_text: str, file_filters: list[str] = []):
         reset_chat_history()
         return "Chat history cleared."
 
-    filters = None
+    required_filters = [
+        MetadataFilter(key="access_level", value=ACCESS_CONTROL_STATUS)
+    ]
 
     if file_filters:
         print(f"🔍 Filtering chat by documents: {file_filters}")
-        filters = MetadataFilters(
-            filters=[
-                MetadataFilter(key="file_name", value=f) for f in file_filters
-            ],
+        file_conditions = [
+            MetadataFilter(key="file_name", value=f) for f in file_filters
+        ]
+        file_filters_group = MetadataFilters(
+            filters=file_conditions,
             condition=FilterCondition.OR
         )
+        required_filters.append(file_filters_group)
+
+    filters = MetadataFilters(
+        filters=required_filters,
+        condition=FilterCondition.AND
+    )
 
     memory = initialize_memory()
     chat_engine = _index_instance.as_chat_engine(
@@ -352,4 +371,4 @@ def get_response(query_text: str, file_filters: list[str] = []):
     return response
 
 if __name__ == "__main__":
-    rebuild_knowledge_base()
+    pass
