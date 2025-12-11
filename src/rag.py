@@ -425,8 +425,8 @@ def get_response(query_text: str, file_filters: list[str] = []):
         filters_list.append(
             MetadataFilter(
                 key="file_name",
-                value=file_filters, # Передаем список строк
-                operator=FilterOperator.IN # Оператор IN
+                value=file_filters,
+                operator=FilterOperator.IN
             )
         )
 
