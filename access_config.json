@@ -1,8 +1,8 @@
 {
-    "compare.txt": "public",
-    "The Rust Programming Language.pdf": "public",
-    "test.txt": "public",
-    "test.pdf": "public",
-    "test.md": "public",
+    "compare.txt": "private",
+    "The Rust Programming Language.pdf": "private",
+    "test.txt": "private",
+    "test.pdf": "private",
+    "test.md": "private",
     "test.docx": "private"
 }

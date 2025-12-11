@@ -8,7 +8,7 @@ import chromadb
 from llama_index.core import VectorStoreIndex, SimpleDirectoryReader, Settings, Document, StorageContext
 from llama_index.core.node_parser import SemanticSplitterNodeParser
 from llama_index.core.postprocessor import SimilarityPostprocessor
-from llama_index.core.vector_stores import MetadataFilters, MetadataFilter, FilterCondition
+from llama_index.core.vector_stores import MetadataFilters, MetadataFilter, FilterCondition, FilterOperator
 from llama_index.core.memory import ChatMemoryBuffer
 from llama_index.vector_stores.chroma import ChromaVectorStore
 from llama_index.embeddings.huggingface import HuggingFaceEmbedding
@@ -138,7 +138,6 @@ def save_access_control_config(config: dict):
     config_path = ACCESS_CONTROL_FILE
     with open(config_path, 'w') as f:
         json.dump(config, f, indent=4)
-    set_access_control_config(config)
 
 set_access_control_config(get_access_control_config())
 
@@ -417,26 +416,24 @@ def get_response(query_text: str, file_filters: list[str] = []):
         reset_chat_history()
         return "Chat history cleared."
 
-    required_filters = [
+    filters_list = [
         MetadataFilter(key="access_level", value=ACCESS_CONTROL_STATUS)
     ]
 
     if file_filters:
         print(f"🔍 Filtering chat by documents: {file_filters}")
-        file_conditions = [
-            MetadataFilter(key="file_name", value=f) for f in file_filters
-        ]
-        file_filters_group = MetadataFilters(
-            filters=file_conditions,
-            condition=FilterCondition.OR
+        filters_list.append(
+            MetadataFilter(
+                key="file_name",
+                value=file_filters, # Передаем список строк
+                operator=FilterOperator.IN # Оператор IN
+            )
         )
-        required_filters.append(file_filters_group)
 
     filters = MetadataFilters(
-        filters=required_filters,
+        filters=filters_list,
         condition=FilterCondition.AND
     )
-
     memory = initialize_memory()
     chat_engine = _index_instance.as_chat_engine(
         chat_mode="condense_plus_context",
@@ -451,6 +448,8 @@ def get_response(query_text: str, file_filters: list[str] = []):
             "Keep your answers short, direct, and to the point. "
             "Do not use ASCII tables or markdown tables unless explicitly asked. "
             "Use markdown formatting for answers. "
+            "CRITICAL INSTRUCTION: If the provided context does NOT contain the facts to answer the question, "
+            "you MUST say 'I cannot answer this based on the available documents'. "
         ),
         verbose=False
     )

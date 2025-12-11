@@ -17,7 +17,8 @@ from src.rag import (
     rebuild_knowledge_base,
     reset_chat_history,
     save_access_control_config,
-    get_documents_access_control
+    get_documents_access_control,
+    sync_access_levels
 )
 
 console = Console()
@@ -221,6 +222,7 @@ def run_admin_dashboard(console: Console):
 
         if choice.lower() == "save":
             save_access_control_config(current_config)
+            sync_access_levels()
             console.print("[bold green]✅ Config saved successfully![/bold green]")
             break
 
