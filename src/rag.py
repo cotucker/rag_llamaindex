@@ -49,6 +49,76 @@ STATE_FILE = os.path.join(settings.vector_store.path, "kb_state.json")
 ACCESS_CONTROL_FILE = "access_config.json"
 ACCESS_CONTROL_STATUS = "private"
 
+def sync_access_levels():
+    print("🔄 Syncing access levels across the database...")
+    db_path = settings.vector_store.path
+    collection_name = settings.vector_store.collection_name
+    config_path = ACCESS_CONTROL_FILE
+
+    if not os.path.exists(config_path):
+        print("⚠️ Access config not found. Skipping sync.")
+        return
+
+    try:
+        with open(config_path, 'r') as f:
+            access_config = json.load(f)
+    except Exception as e:
+        print(f"❌ Error loading access config: {e}")
+        return
+
+    try:
+        db = chromadb.PersistentClient(path=db_path)
+        collection = db.get_collection(name=collection_name)
+    except Exception as e:
+        print(f"❌ Error connecting to database: {e}")
+        return
+
+    existing_data = collection.get(include=["metadatas"])
+    ids_to_update = []
+    metadatas_to_update = []
+    update_count = 0
+    total_chunks = len(existing_data["ids"])
+    print(f"📊 Scanning {total_chunks} chunks...")
+
+    for i, doc_id in enumerate(existing_data["ids"]):
+        current_metadata = existing_data["metadatas"][i]
+        file_name = current_metadata.get("file_name")
+
+        if not file_name:
+            continue
+
+        target_access = access_config.get(file_name, "public")
+        current_access = current_metadata.get("access_level")
+
+        if current_access != target_access:
+            current_metadata["access_level"] = target_access
+            ids_to_update.append(doc_id)
+            metadatas_to_update.append(current_metadata)
+            update_count += 1
+
+    if ids_to_update:
+        print(f"📝 Updating {len(ids_to_update)} chunks...")
+        batch_size = 5000
+
+        for i in range(0, len(ids_to_update), batch_size):
+            end = i + batch_size
+            collection.update(
+                ids=ids_to_update[i:end],
+                metadatas=metadatas_to_update[i:end]
+            )
+
+        print(f"✅ Successfully updated access levels for {update_count} chunks.")
+    else:
+        print("✅ No access level changes required.")
+
+def get_documents_access_control():
+    path = settings.domain.domain_path
+    documents = []
+    if not os.path.exists(path):
+        os.makedirs(path)
+        return []
+    filenames = sorted(os.listdir(path))
+
 def get_access_control_config():
     with open(ACCESS_CONTROL_FILE, 'r') as f:
         config = json.load(f)
@@ -321,6 +391,7 @@ def reset_chat_history():
 
 _index_instance = initialize_index()
 _memory = None
+sync_access_levels()
 
 def get_response(query_text: str, file_filters: list[str] = []):
     if _index_instance is None:
