@@ -9,4 +9,8 @@ wheels/
 # Virtual environments
 .venv
 .env
-chroma_db
+*chroma*/
+*lancedb_data*/
+qdrant_data
+awadb_storage
+*bench*/

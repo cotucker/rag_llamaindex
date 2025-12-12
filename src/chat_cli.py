@@ -183,7 +183,7 @@ def run_admin_dashboard(console: Console):
     new_files = [f for f in files_on_disk if f not in current_config]
 
     for f in new_files:
-        current_config[f] = "private" # Или 'public', как вам удобнее
+        current_config[f] = "private"
 
     while True:
         console.clear()
